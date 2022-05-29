@@ -1,43 +1,70 @@
 mod binary_heap;
+mod binomial_heap;
 
-use std::fmt::Display;
-use std::hash::Hash;
+use std::time::Instant;
 
-use binary_heap::BinaryHeap;
+use crate::binary_heap::BinaryHeap;
+use crate::binomial_heap::BinomialHeap;
+
+const HEAP_SIZES: [usize; 9] = [
+    10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
+];
 
 fn main() {
-    println!("Hello, world!");
+    let mut binary_heap_insert_times = vec![];
+    let mut binomial_heap_insert_times = vec![];
 
-    let mut heap = BinaryHeap::<str>::new();
+    for i in &HEAP_SIZES {
+        println!("Heap size: {}", *i); 
+        let mut total_time = 0;
+        for _ in 1..10 {
+            let mut binomial_heap1 = BinomialHeap::new();
+            for k in 0..*i {
+                binomial_heap1.push(k,  k as f64);
+            }
+            
+            let mut binomial_heap2 = BinomialHeap::new();
+            for k in *i..(i*2) {
+                binomial_heap2.push(k,  k as f64);
+            }
 
-    let neg_one = "-1";
+            let start = Instant::now();
+            binomial_heap1.meld(binomial_heap2);
+            total_time += start.elapsed().as_nanos();
+            
+            if binomial_heap1.is_empty() {
+                println!("Hey");
+            }
+        }
+        binomial_heap_insert_times.push(total_time);
 
-    heap.push(&"5", 5.0);
-    heap.push(&"4", 4.0);
-    heap.push(&"3", 3.0);
-    heap.push(&"2", 2.0);
-    heap.push(&"1", 1.0);
-    heap.push(&neg_one, 50.0);
-    peek_and_print(&heap);
+        let mut total_time = 0;
+        for _ in 1..10 {
+            let mut binary_heap1 = BinaryHeap::new();
+            for k in 0..*i {
+                binary_heap1.push(k, k as f64);
+            }
 
-    heap.update_weight(&"-1", -10.0);
-    peek_and_print(&heap);
-
-    heap.update_weight(&neg_one, 3.5);
-    peek_and_print(&heap);
-
-    heap.update_weight(&neg_one, -1.0);
-
-
-    while !heap.is_empty() {
-        pop_and_print(&mut heap);
+            let mut binary_heap2 = BinaryHeap::new();
+            for k in *i..(i*2) {
+                binary_heap2.push(k, k as f64);
+            }
+            
+            let start = Instant::now();
+            binary_heap1.meld(binary_heap2);
+            total_time += start.elapsed().as_nanos();
+            
+            if binary_heap1.is_empty() {
+                println!("Hey");
+            }
+        }
+        binary_heap_insert_times.push(total_time);
     }
-}
 
-fn peek_and_print<V: Eq + Hash + Display + ?Sized>(heap: &BinaryHeap<V>) {
-    println!("{}", heap.peek().expect("Heap empty").value);
-}
+    println!("n binary binomial");
 
-fn pop_and_print<V: Eq + Hash + Display + ?Sized>(heap: &mut BinaryHeap<V>) {
-    println!("{}", heap.pop().expect("Heap empty").value);
+    for i in 0..HEAP_SIZES.len() {
+        println!("{} {} {}", HEAP_SIZES[i], binary_heap_insert_times[i], binomial_heap_insert_times[i]);
+    }
+
 }
